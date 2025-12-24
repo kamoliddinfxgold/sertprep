@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IELTS Full Practice Test</title>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #4f46e5 0%, #7e22ce 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .score-display {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .score-card {
+            background: rgba(255,255,255,0.1);
+            padding: 15px 30px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+
+        .score-card h3 {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .score-card p {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        .tabs {
+            display: flex;
+            background: #f1f5f9;
+            padding: 0 20px;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            padding: 20px 30px;
+            cursor: pointer;
+            font-weight: 600;
+            color: #64748b;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+        }
+
+        .tab:hover {
+            background: #e2e8f0;
+        }
+
+        .tab.active {
+            color: #4f46e5;
+            border-bottom: 3px solid #4f46e5;
+            background: white;
+        }
+
+        .content {
+            padding: 40px;
+            min-height: 500px;
+        }
+
+        .section {
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        .question-container {
+            background: #f8fafc;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 25px;
+            border-left: 5px solid #4f46e5;
+        }
+
+        .question-number {
+            color: #4f46e5;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .question-text {
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .options {
+            display: grid;
+            gap: 12px;
+        }
+
+        .option {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid #e2e8f0;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .option:hover {
+            border-color: #4f46e5;
+            transform: translateY(-2px);
+        }
+
+        .option.selected {
+            border-color: #4f46e5;
+            background: #eef2ff;
+        }
+
+        button {
+            background: linear-gradient(135deg, #4f46e5 0%, #7e22ce 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(79, 70, 229, 0.3);
+        }
+
+        .timer {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #ef4444;
+            background: #fef2f2;
+            padding: 10px 20px;
+            border-radius: 10px;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+
+        .speaking-container {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .recording-controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .record-btn {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: #ef4444;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .record-btn.recording {
+            animation: pulse 1.5s infinite;
+        }
+
+        .listening-container iframe {
+            width: 100%;
+            height: 500px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .ai-feedback {
+            background: #f0f9ff;
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 30px;
+            border-left: 5px solid #0ea5e9;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #64748b;
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                padding: 20px;
+            }
+            
+            .tabs {
+                justify-content: center;
+            }
+            
+            .tab {
+                padding: 15px;
+                font-size: 0.9rem;
+            }
+            
+            header h1 {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎯 IELTS Full Practice Test</h1>
+            <p>Complete IELTS simulation with AI-powered evaluation</p>
+            
+            <div class="score-display">
+                <div class="score-card">
+                    <h3>Listening</h3>
+                    <p id="listeningScore">0.0</p>
+                </div>
+                <div class="score-card">
+                    <h3>Reading</h3>
+                    <p id="readingScore">0.0</p>
+                </div>
+                <div class="score-card">
+                    <h3>Writing</h3>
+                    <p id="writingScore">0.0</p>
+                </div>
+                <div class="score-card">
+                    <h3>Speaking</h3>
+                    <p id="speakingScore">0.0</p>
+                </div>
+            </div>
+            <!-- Test selector added: choose which saved test to load -->
+            <div style="margin-top:18px; display:flex; justify-content:center; gap:12px; align-items:center;">
+                <label for="testSelector" style="color:rgba(255,255,255,0.9); font-weight:600;">Select Test:</label>
+                <select id="testSelector" onchange="selectTest(this.value)" style="padding:8px 12px; border-radius:8px; border:none; font-weight:600;">
+                    <option value="">Loading tests...</option>
+                </select>
+            </div>
+            <!-- Auth area -->
+            <div id="authArea" style="margin-top:12px; display:flex; justify-content:center; gap:12px; align-items:center;">
+                <div id="signedOut">
+                    <button onclick="toggleAuthForm('login')" style="padding:8px 12px; border-radius:8px;">Login</button>
+                    <button onclick="toggleAuthForm('register')" style="padding:8px 12px; border-radius:8px;">Register</button>
+                </div>
+                <div id="signedIn" style="display:none; align-items:center; gap:10px;">
+                    <span id="userEmail" style="font-weight:600;"></span>
+                    <button onclick="signOutUser()" style="padding:8px 12px; border-radius:8px;">Sign Out</button>
+                </div>
+            </div>
+            <div id="authForm" style="display:none; justify-content:center; margin-top:10px;">
+                <input id="authEmail" type="email" placeholder="Email" style="padding:8px; border-radius:6px; margin-right:8px;"> 
+                <input id="authPassword" type="password" placeholder="Password" style="padding:8px; border-radius:6px; margin-right:8px;"> 
+                <button id="authSubmit" onclick="submitAuth()" style="padding:8px 12px; border-radius:8px;">Submit</button>
+                <button onclick="toggleAuthForm()" style="padding:8px 12px; border-radius:8px; margin-left:6px;">Cancel</button>
+                <div id="authMessage" style="color:#fde68a; margin-left:12px;"></div>
+            </div>
+        </header>
+
+        <div class="tabs">
+            <div class="tab active" data-section="listening">🎧 Listening</div>
+            <div class="tab" data-section="reading">📚 Reading</div>
+            <div class="tab" data-section="writing">✍️ Writing</div>
+            <div class="tab" data-section="speaking">🎤 Speaking</div>
+            <div class="tab" data-section="results">📊 Results</div>
+        </div>
+
+        <div class="content">
+            <!-- Listening Section -->
+            <div class="section active" id="listening">
+                <div class="timer" id="listeningTimer">30:00</div>
+                <div id="listeningQuestions"></div>
+                <button onclick="submitListening()">Submit Listening Test</button>
+                
+                <div class="listening-container">
+                    <h3>Listening Audio</h3>
+                    <div id="youtubePlayer"></div>
+                </div>
+            </div>
+
+            <!-- Reading Section -->
+            <div class="section" id="reading">
+                <div class="timer" id="readingTimer">60:00</div>
+                <div id="readingPassage" style="margin-bottom:18px;">
+                    <!-- Passage will be inserted here -->
+                </div>
+                <div id="readingQuestions"></div>
+                <button onclick="submitReading()">Submit Reading Test</button>
+            </div>
+
+            <!-- Writing Section -->
+            <div class="section" id="writing">
+                <div class="timer" id="writingTimer">60:00</div>
+                <div id="writingTasks"></div>
+                <button onclick="submitWriting()">Submit Writing Test</button>
+            </div>
+
+            <!-- Speaking Section -->
+            <div class="section" id="speaking">
+                <div class="speaking-container">
+                    <h2>Speaking Test</h2>
+                    <p>Record your answers to the following questions:</p>
+                    
+                    <div id="speakingPrompt" class="question-container">
+                        <h3>Part 1: Introduction</h3>
+                        <p>Tell me about your hometown.</p>
+                    </div>
+                    
+                    <div class="recording-controls">
+                        <div class="record-btn" id="recordBtn" onclick="toggleRecording()">
+                            <span style="color: white; font-size: 1.5rem;">●</span>
+                        </div>
+                    </div>
+                    
+                    <div id="recordingStatus">Click the red button to start recording</div>
+                    
+                    <div class="ai-feedback" id="speakingFeedback">
+                        <h3>AI Feedback will appear here after recording</h3>
+                    </div>
+                    
+                    <button onclick="submitSpeaking()">Submit Speaking Test</button>
+                </div>
+            </div>
+
+            <!-- Results Section -->
+            <div class="section" id="results">
+                <div class="loading" id="resultsContent">
+                    <h2>Your Results</h2>
+                    <p>Complete all sections to see your results</p>
+                    <canvas id="scoreChart" width="400" height="200"></canvas>
+                    
+                    <div id="detailedResults"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDwATvxtZn26JXm3c_raQc-TRCuTGpkcSw",
+  authDomain: "sertprep-c552c.firebaseapp.com",
+  projectId: "sertprep-c552c",
+  storageBucket: "sertprep-c552c.firebasestorage.app",
+  messagingSenderId: "75836357408",
+  appId: "1:75836357408:web:7705c00e2ea560c555b545",
+  measurementId: "G-CZFES6X0SF"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+
+        // Authentication helpers
+        let _authMode = null; // 'login' or 'register'
+
+        // Update header UI based on auth state
+        function updateAuthUI(user) {
+            const signedIn = document.getElementById('signedIn');
+            const signedOut = document.getElementById('signedOut');
+            const userEmail = document.getElementById('userEmail');
+            const authForm = document.getElementById('authForm');
+
+            if (user) {
+                currentUser = user;
+                signedIn.style.display = 'flex';
+                signedOut.style.display = 'none';
+                if (user.email) userEmail.textContent = user.email;
+                authForm.style.display = 'none';
+            } else {
+                currentUser = null;
+                signedIn.style.display = 'none';
+                signedOut.style.display = 'flex';
+            }
+        }
+
+        // Toggle auth form visibility and set mode
+        function toggleAuthForm(mode) {
+            const authForm = document.getElementById('authForm');
+            const authMessage = document.getElementById('authMessage');
+            if (!mode) {
+                authForm.style.display = authForm.style.display === 'flex' ? 'none' : 'none';
+                authMessage.textContent = '';
+                return;
+            }
+            _authMode = mode;
+            authForm.style.display = 'flex';
+            document.getElementById('authEmail').value = '';
+            document.getElementById('authPassword').value = '';
+            authMessage.textContent = mode === 'login' ? 'Enter credentials to login' : 'Choose email and password to register';
+        }
+
+        // Submit auth (register or login)
+        async function submitAuth() {
+            const email = document.getElementById('authEmail').value.trim();
+            const password = document.getElementById('authPassword').value;
+            const authMessage = document.getElementById('authMessage');
+
+            if (!email || !password) {
+                authMessage.textContent = 'Email and password are required';
+                return;
+            }
+
+            try {
+                if (_authMode === 'register') {
+                    await auth.createUserWithEmailAndPassword(email, password);
+                    authMessage.textContent = 'Registered and signed in';
+                } else {
+                    await auth.signInWithEmailAndPassword(email, password);
+                    authMessage.textContent = 'Signed in';
+                }
+                // auth state listener will update UI
+            } catch (err) {
+                console.error('Auth error:', err);
+                authMessage.textContent = err.message || String(err);
+            }
+        }
+
+        // Sign out
+        async function signOutUser() {
+            try {
+                await auth.signOut();
+                updateAuthUI(null);
+            } catch (err) {
+                console.error('Sign out error:', err);
+            }
+        }
+
+        // Listen for auth state changes
+        auth.onAuthStateChanged(user => {
+            updateAuthUI(user);
+        });
+
+        // Global Variables
+        let currentUser = null;
+        let listeningAnswers = {};
+        let readingAnswers = {};
+        let writingAnswers = {};
+        let speakingAnswers = {};
+        let recording = false;
+        let mediaRecorder;
+        let audioChunks = [];
+
+        // Tab Switching
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+                
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.section).classList.add('active');
+            });
+        });
+
+        // Load Tests from Firebase (load all tests saved via Admin)
+        let testsList = [];
+        let currentTestId = null;
+
+        async function loadAllTests() {
+            try {
+                const snapshot = await db.collection('tests').get();
+                const selector = document.getElementById('testSelector');
+                testsList = [];
+                selector.innerHTML = '';
+
+                if (snapshot.empty) {
+                    selector.innerHTML = '<option value="">No tests available</option>';
+                    return;
+                }
+
+                snapshot.forEach(doc => {
+                    const t = { id: doc.id, ...doc.data() };
+                    testsList.push(t);
+                });
+
+                // populate selector
+                testsList.forEach((t, idx) => {
+                    const opt = document.createElement('option');
+                    opt.value = idx; // use index to reference testsList
+                    opt.textContent = t.title || `Test ${idx + 1}`;
+                    selector.appendChild(opt);
+                });
+
+                // Auto-select first test
+                if (testsList.length > 0) {
+                    selector.value = 0;
+                    selectTest(0);
+                }
+            } catch (error) {
+                console.error('Error loading tests:', error);
+                const selector = document.getElementById('testSelector');
+                selector.innerHTML = '<option value="">Error loading tests</option>';
+            }
+        }
+
+        function selectTest(val) {
+            if (val === null || val === undefined || val === '') return;
+            const idx = Number(val);
+            const test = testsList[idx];
+            if (!test) return;
+
+            currentTestId = test.id;
+            // Apply test data
+            const listening = test.listening || [];
+            const reading = test.reading || [];
+            const writing = test.writing || { task1: '', task2: '' };
+
+            loadListeningQuestions(listening);
+            loadReadingQuestions(reading);
+            // display passage if available
+            displayReadingPassage(test.readingPassage || test.readingPassageText || (test.reading && test.reading.passage) || '');
+            loadWritingTasks(writing);
+            startTimers();
+
+            // Load YouTube if provided
+            if (test.youtubeId) {
+                const info = parseYouTubeInfo(test.youtubeId);
+                if (info && info.id) {
+                    loadYouTubePlayer(info.id, info.start);
+                } else {
+                    console.warn('Could not parse YouTube id:', test.youtubeId);
+                }
+            }
+        }
+
+        // Listening Section
+        function loadListeningQuestions(questions) {
+            const container = document.getElementById('listeningQuestions');
+            container.innerHTML = '';
+            
+            questions.forEach((q, index) => {
+                const questionHTML = `
+                    <div class="question-container">
+                        <div class="question-number">Question ${index + 1}</div>
+                        <div class="question-text">${q.question}</div>
+                        <div class="options">
+                            ${q.options.map((opt, optIndex) => `
+                                <div class="option" onclick="selectListeningAnswer(${index}, ${optIndex})">
+                                    ${String.fromCharCode(65 + optIndex)}. ${opt}
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += questionHTML;
+            });
+        }
+
+        function selectListeningAnswer(qIndex, optIndex) {
+            const options = document.querySelectorAll(`#listeningQuestions .question-container:nth-child(${qIndex + 1}) .option`);
+            options.forEach(opt => opt.classList.remove('selected'));
+            options[optIndex].classList.add('selected');
+            listeningAnswers[qIndex] = optIndex;
+        }
+
+        // Reading Section
+        function loadReadingQuestions(questions) {
+            const container = document.getElementById('readingQuestions');
+            container.innerHTML = '';
+
+            if (!questions || questions.length === 0) {
+                container.innerHTML = '<p>No reading questions provided for this test.</p>';
+                return;
+            }
+
+            questions.forEach((q, index) => {
+                const questionHTML = `
+                    <div class="question-container">
+                        <div class="question-number">Question ${index + 1}</div>
+                        <div class="question-text">${q.question}</div>
+                        <div class="options">
+                            ${q.options.map((opt, optIndex) => `
+                                <div class="option" onclick="selectReadingAnswer(${index}, ${optIndex})">
+                                    ${String.fromCharCode(65 + optIndex)}. ${opt}
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += questionHTML;
+            });
+        }
+
+        function displayReadingPassage(passage) {
+            const container = document.getElementById('readingPassage');
+            if (!container) return;
+            if (!passage || passage.trim() === '') {
+                container.innerHTML = '<p style="color:#64748b;">No reading passage provided for this test.</p>';
+                return;
+            }
+
+            // Simple rendering of passage
+            container.innerHTML = `<div class="question-container" style="border-left-color:#0ea5e9;">
+                <div class="question-number">Reading Passage</div>
+                <div class="question-text">${escapeHtml(passage).replace(/\n/g, '<br/>')}</div>
+            </div>`;
+        }
+
+        // basic HTML escape to avoid accidental injection from Firestore
+        function escapeHtml(unsafe) {
+            return String(unsafe)
+              .replace(/&/g, '&amp;')
+              .replace(/</g, '&lt;')
+              .replace(/>/g, '&gt;')
+              .replace(/"/g, '&quot;')
+              .replace(/'/g, '&#039;');
+        }
+
+        function selectReadingAnswer(qIndex, optIndex) {
+            const options = document.querySelectorAll(`#readingQuestions .question-container:nth-child(${qIndex + 1}) .option`);
+            options.forEach(opt => opt.classList.remove('selected'));
+            options[optIndex].classList.add('selected');
+            readingAnswers[qIndex] = optIndex;
+        }
+
+        // Writing Section
+        function loadWritingTasks(writing) {
+            const container = document.getElementById('writingTasks');
+            container.innerHTML = '';
+
+            const task1 = writing && writing.task1 ? writing.task1 : '';
+            const task2 = writing && writing.task2 ? writing.task2 : '';
+
+            container.innerHTML = `
+                <div class="question-container">
+                    <div class="question-number">Task 1</div>
+                    <div class="question-text">${task1}</div>
+                    <textarea id="writingTask1" rows="6" style="width:100%; margin-top:12px; padding:12px; border-radius:8px;"></textarea>
+                </div>
+                <div class="question-container">
+                    <div class="question-number">Task 2</div>
+                    <div class="question-text">${task2}</div>
+                    <textarea id="writingTask2" rows="8" style="width:100%; margin-top:12px; padding:12px; border-radius:8px;"></textarea>
+                </div>
+            `;
+
+            // keep writingAnswers updated
+            writingAnswers = { task1: '', task2: '' };
+            const t1 = document.getElementById('writingTask1');
+            const t2 = document.getElementById('writingTask2');
+            if (t1) t1.addEventListener('input', () => writingAnswers.task1 = t1.value);
+            if (t2) t2.addEventListener('input', () => writingAnswers.task2 = t2.value);
+        }
+
+        // YouTube Player
+        function loadYouTubePlayer(videoId, startSeconds) {
+            const playerDiv = document.getElementById('youtubePlayer');
+            if (!videoId) {
+                playerDiv.innerHTML = '<p>No video available for this test.</p>';
+                return;
+            }
+
+            // Build embed URL safely. Only include start param when present.
+            const params = [];
+            if (startSeconds && Number.isFinite(startSeconds)) params.push(`start=${Number(startSeconds)}`);
+            const query = params.length ? `?${params.join('&')}` : '';
+
+            playerDiv.innerHTML = `
+                <iframe 
+                    src="https://www.youtube.com/embed/${videoId}${query}"
+                    frameborder="0" 
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                    allowfullscreen>
+                </iframe>
+            `;
+        }
+
+        // Extract YouTube video ID and optional start time from different input formats
+        function parseYouTubeInfo(input) {
+            if (!input) return null;
+            const s = String(input).trim();
+
+            // If it's already a plain 11-char id
+            const idOnly = s.match(/^[A-Za-z0-9_-]{11}$/);
+            if (idOnly) return { id: idOnly[0], start: null };
+
+            try {
+                // Try to parse as URL
+                // Accept formats like:
+                // - https://youtu.be/VIDEOID
+                // - https://www.youtube.com/watch?v=VIDEOID&t=9
+                // - https://www.youtube.com/embed/VIDEOID?start=9
+                const urlStr = s.startsWith('http') ? s : null;
+                let id = null;
+                let start = null;
+
+                if (urlStr) {
+                    const u = new URL(s);
+                    // youtu.be short link
+                    if (u.hostname.includes('youtu.be')) {
+                        id = u.pathname.slice(1);
+                        const t = u.searchParams.get('t') || u.hash.match(/t=(\d+)/)?.[1];
+                        if (t) start = Number(t);
+                    } else {
+                        // youtube.com
+                        if (u.searchParams.get('v')) id = u.searchParams.get('v');
+                        if (!id && u.pathname.startsWith('/embed/')) id = u.pathname.split('/embed/')[1].split('/')[0];
+                        // check start or t params
+                        const t = u.searchParams.get('start') || u.searchParams.get('t') || (u.hash && u.hash.match(/t=(\d+)/)?.[1]);
+                        if (t) start = Number(t);
+                    }
+                }
+
+                // If still not found, try to pull an id-like substring
+                if (!id) {
+                    const maybe = s.match(/([A-Za-z0-9_-]{11})/);
+                    if (maybe) id = maybe[1];
+                }
+
+                if (id) return { id, start };
+            } catch (err) {
+                // ignore and fallthrough
+            }
+
+            return null;
+        }
+
+        // Speaking Section
+        async function toggleRecording() {
+            const recordBtn = document.getElementById('recordBtn');
+            const status = document.getElementById('recordingStatus');
+            
+            if (!recording) {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+                    
+                    mediaRecorder.ondataavailable = event => {
+                        audioChunks.push(event.data);
+                    };
+                    
+                    mediaRecorder.onstop = async () => {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                        await analyzeSpeaking(audioBlob);
+                    };
+                    
+                    mediaRecorder.start();
+                    recording = true;
+                    recordBtn.classList.add('recording');
+                    status.textContent = "Recording... Click again to stop";
+                } catch (error) {
+                    alert("Error accessing microphone: " + error.message);
+                }
+            } else {
+                mediaRecorder.stop();
+                recording = false;
+                recordBtn.classList.remove('recording');
+                status.textContent = "Processing your recording...";
+            }
+        }
+
+        async function analyzeSpeaking(audioBlob) {
+            const feedbackDiv = document.getElementById('speakingFeedback');
+            feedbackDiv.innerHTML = '<div class="loading">Analyzing your speech with AI...</div>';
+            
+            // Convert blob to base64
+            const reader = new FileReader();
+            reader.readAsDataURL(audioBlob);
+            
+            reader.onloadend = async function() {
+                const base64Audio = reader.result.split(',')[1];
+                
+                // Send to Python backend for analysis
+                try {
+                    const response = await fetch('http://localhost:5000/analyze_speaking', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            audio: base64Audio,
+                            question: document.querySelector('#speakingPrompt p').textContent
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    feedbackDiv.innerHTML = `
+                        <h3>AI Feedback</h3>
+                        <p><strong>Fluency:</strong> ${result.fluency_score}/9</p>
+                        <p><strong>Pronunciation:</strong> ${result.pronunciation_score}/9</p>
+                        <p><strong>Grammar:</strong> ${result.grammar_score}/9</p>
+                        <p><strong>Vocabulary:</strong> ${result.vocabulary_score}/9</p>
+                        <p><strong>Overall Score:</strong> ${result.overall_score}/9</p>
+                        <p><strong>Feedback:</strong> ${result.feedback}</p>
+                    `;
+                    
+                    speakingAnswers = {
+                        score: result.overall_score,
+                        feedback: result.feedback,
+                        audio: base64Audio
+                    };
+                    
+                    document.getElementById('speakingScore').textContent = result.overall_score;
+                } catch (error) {
+                    feedbackDiv.innerHTML = '<p>Error analyzing speech. Please try again.</p>';
+                }
+            };
+        }
+
+        // Timers (clear previous intervals when starting new ones)
+        const _timerHandles = {};
+        function startTimers() {
+            startTimer('listeningTimer', 30 * 60);
+            startTimer('readingTimer', 60 * 60);
+            startTimer('writingTimer', 60 * 60);
+        }
+
+        function startTimer(elementId, seconds) {
+            const timerElement = document.getElementById(elementId);
+            let timeLeft = seconds;
+
+            // clear previous interval if exists
+            if (_timerHandles[elementId]) {
+                clearInterval(_timerHandles[elementId]);
+            }
+
+            const timer = setInterval(() => {
+                const minutes = Math.floor(timeLeft / 60);
+                const seconds = timeLeft % 60;
+                timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    alert(`Time's up for ${elementId.replace('Timer', '')} section!`);
+                }
+                timeLeft--;
+            }, 1000);
+
+            _timerHandles[elementId] = timer;
+        }
+
+        // Submit Functions
+        async function submitListening() {
+            const score = calculateScore(listeningAnswers, 'listening');
+            document.getElementById('listeningScore').textContent = score;
+            
+            await saveResults('listening', score, listeningAnswers);
+            alert('Listening test submitted!');
+        }
+
+        async function submitReading() {
+            const score = calculateScore(readingAnswers, 'reading');
+            document.getElementById('readingScore').textContent = score;
+            
+            await saveResults('reading', score, readingAnswers);
+            alert('Reading test submitted!');
+        }
+
+        async function submitWriting() {
+            // Simulate writing score (in real app, this would be AI evaluated)
+            const score = 6.5;
+            document.getElementById('writingScore').textContent = score;
+            
+            await saveResults('writing', score, writingAnswers);
+            alert('Writing test submitted!');
+        }
+
+        async function submitSpeaking() {
+            if (!speakingAnswers.score) {
+                alert('Please complete the speaking recording first');
+                return;
+            }
+            
+            await saveResults('speaking', speakingAnswers.score, speakingAnswers);
+            alert('Speaking test submitted!');
+            showResults();
+        }
+
+        function calculateScore(answers, section) {
+            // Simplified scoring - in real app, use proper IELTS scoring
+            const totalQuestions = section === 'listening' ? 40 : 40;
+            const correct = Object.keys(answers).length;
+            const percentage = (correct / totalQuestions) * 100;
+            
+            // Convert to IELTS band score
+            if (percentage >= 95) return 9.0;
+            if (percentage >= 88) return 8.5;
+            if (percentage >= 80) return 8.0;
+            if (percentage >= 70) return 7.5;
+            if (percentage >= 60) return 7.0;
+            if (percentage >= 50) return 6.5;
+            if (percentage >= 40) return 6.0;
+            if (percentage >= 30) return 5.5;
+            return 5.0;
+        }
+
+        async function saveResults(section, score, answers) {
+            // Require signed-in user (email/password) to save results.
+            if (!currentUser) {
+                alert('Please sign in or register to save your results.');
+                toggleAuthForm('login');
+                throw new Error('Not authenticated');
+            }
+
+            try {
+                await db.collection('results').add({
+                    userId: currentUser.uid || currentUser.user?.uid,
+                    section: section,
+                    score: score,
+                    answers: answers,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            } catch (err) {
+                console.error('Error saving results:', err);
+                throw err;
+            }
+        }
+
+        async function showResults() {
+            const scores = {
+                listening: parseFloat(document.getElementById('listeningScore').textContent),
+                reading: parseFloat(document.getElementById('readingScore').textContent),
+                writing: parseFloat(document.getElementById('writingScore').textContent),
+                speaking: parseFloat(document.getElementById('speakingScore').textContent)
+            };
+            
+            const overall = (scores.listening + scores.reading + scores.writing + scores.speaking) / 4;
+            
+            document.getElementById('resultsContent').innerHTML = `
+                <h2>Your IELTS Results</h2>
+                <p><strong>Overall Band Score: ${overall.toFixed(1)}</strong></p>
+                <canvas id="scoreChart" width="400" height="200"></canvas>
+                <div class="score-display" style="margin-top: 30px;">
+                    ${Object.entries(scores).map(([section, score]) => `
+                        <div class="score-card">
+                            <h3>${section.charAt(0).toUpperCase() + section.slice(1)}</h3>
+                            <p>${score}</p>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            
+            // Draw chart
+            const ctx = document.getElementById('scoreChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['Listening', 'Reading', 'Writing', 'Speaking'],
+                    datasets: [{
+                        label: 'Your Scores',
+                        data: Object.values(scores),
+                        backgroundColor: 'rgba(79, 70, 229, 0.2)',
+                        borderColor: 'rgba(79, 70, 229, 1)',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    scale: {
+                        ticks: {
+                            beginAtZero: true,
+                            max: 9
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize
+        window.onload = function() {
+            loadAllTests();
+            // fallback sample video will only be loaded if no tests provide a video
+            // loadYouTubePlayer('d2H4S6_2HdQ');
+        };
+    </script>
+</body>
+</html>
